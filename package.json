@@ -4,7 +4,9 @@
   "description": "A simple express-app boiler plate I am making for my personal use",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon server.js",
+    "start": "node server.js"
   },
   "author": "Ubongabasi Tommy",
   "license": "ISC",
