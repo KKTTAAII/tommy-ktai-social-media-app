@@ -1,5 +1,15 @@
-import express from "express";
+import express from 'express';
+import {
+    signUp,
+    activateAcc,
+    login
+} from '../controllers/auth.js'
 
-const router = express.Router();
 
-export default router
+const authRouter = express.Router();
+
+authRouter.post('/signup', signUp);
+authRouter.post('/login', login)
+authRouter.patch('/activate/:token', activateAcc)
+
+export default authRouter
