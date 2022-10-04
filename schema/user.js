@@ -24,8 +24,11 @@ const userSchema = mongoose.Schema({
         type: String,
         unique: true,
         minLength: 2,
-        maxLength: 15,
-        required: [true, 'User must enter a userName'],
+        maxLength: 15
+    },
+    activated: {
+        type: Boolean,
+        default: false
     },
     profilePhoto: String,
     profile: {
@@ -58,6 +61,10 @@ userSchema.methods.actToken = function () {
     return actToken;
 };
 
+//To check password correctness
+userSchema.methods.checkPass = async function (enteredPass, storedPass) {
+    return await bcrypt.compare(enteredPass, storedPass)
+}
 
 const User = mongoose.model('User', userSchema)
 

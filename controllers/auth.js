@@ -1,9 +1,9 @@
-import User from '../models/user.js';
-import catchAsync from '../Utils/asyncErr.js';
-import customErr from '../Utils/customErr.js'
+import User from '../schema/user.js';
+import catchAsync from '../Utilities/asyncErr.js';
+import customErr from '../Utilities/customErr.js'
 import jwt from 'jsonwebtoken';
 import crypto from 'node:crypto';
-import emailTemplate from '../Utils/email.js';
+import emailTemplate from '../Utilities/email.js';
 
 const signJwt = (id) => jwt.sign({
     id
@@ -17,12 +17,12 @@ const signUp = catchAsync(async (req, res, next) => {
         name: req.body.name,
         email: req.body.email,
         password: req.body.password,
-        passwordChangedAt: req.body.passwordChangedAt,
         role: req.body.role
     });
 
     if (newUser) {
         const activationToken = newUser.actToken()
+        console.log(activationToken)
         const activateURL = `${req.protocol}://${req.get('host')}/api/v1/auth/activate/${activationToken}`;
         emailTemplate(req, newUser, activateURL)
         res.status(201).json({
@@ -62,7 +62,30 @@ const activateAcc = catchAsync(async (req, res, next) => {
 })
 
 const login = catchAsync(async (req, res, next) => {
+    const {
+        email,
+        password
+    } = req.body
 
+    if (!email || !password) {
+        return next(new customErr('Enter an email and a password', 400))
+    }
+    const user = await User.findOne({
+        email
+    }).select('+password') //The + sign overrides select=false value of password field in the user schema level
+
+    if (!user || !(await user.checkPass(password, user.password))) {
+        return next(new customErr('Incorrect email or password', 400))
+    }
+    user.password = undefined
+    res.status(200).json({
+        status: 'success',
+        message: 'Login successful',
+        token,
+        data: {
+            user
+        }
+    })
 })
 
 export {
