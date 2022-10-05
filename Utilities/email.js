@@ -27,7 +27,7 @@ const sendEmail = async function (options) {
 
     //Send email
     let emailInfo = await transporter.sendMail(mailOptions)
-    // if (emailInfo) console.log(emailInfo.messageId)
+    if (emailInfo) console.log(emailInfo.messageId)
 };
 
 const emailTemplate = async function (req, user, link) {

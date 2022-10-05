@@ -66,6 +66,16 @@ userSchema.methods.checkPass = async function (enteredPass, storedPass) {
     return await bcrypt.compare(enteredPass, storedPass)
 }
 
+//Verify that password has not been recently changed
+userSchema.methods.currentPass = function (jwtTime) {
+    if (this.passwordChangedAt) {
+        const changedTimeStamp = parseInt(this.passwordChangedAt.getTime(), 10)
+        return jwtTime < changedTimeStamp
+    } else return false
+}
+
+
+
 const User = mongoose.model('User', userSchema)
 
 export default User
