@@ -28,9 +28,9 @@ const userSchema = mongoose.Schema({
     },
     userName: {
         type: String,
-        unique: true,
-        minLength: 2,
-        maxLength: 15
+        // unique: true, 
+        // minLength: 2,
+        // maxLength: 15
     },
     activated: {
         type: Boolean,
