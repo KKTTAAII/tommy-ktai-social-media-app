@@ -2,6 +2,12 @@ import mongoose from 'mongoose';
 import validator from 'validator';
 import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs'
+import {
+    head
+} from 'request';
+import {
+    reset
+} from 'nodemon';
 
 const userSchema = mongoose.Schema({
     name: {
@@ -37,7 +43,10 @@ const userSchema = mongoose.Schema({
     },
     registrationDate: Date,
     passwordChangedAt: Date,
-
+    activationToken: String,
+    activationTokenExpires: Date,
+    passwordResetToken: String,
+    passwordResetTokenExpires: Date
 })
 //Mongoose pre-save hook for password hashing
 userSchema.pre('save', async function (next) {
@@ -60,6 +69,14 @@ userSchema.methods.actToken = function () {
     this.activationTokenExpires = (Date.now() + 10 * 60 * 1000); //Set to 48 hours for production
     return actToken;
 };
+
+//Method to generate password reset token 
+userSchema.methods.resetToken = function () {
+    const resetToken = crypto.randomBytes(32).toString('hex')
+    this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex')
+    this.passwordResetTokenExpires = (Date.now() + 60 * 60 * 1000)
+    return resetToken
+}
 
 //To check password correctness
 userSchema.methods.checkPass = async function (enteredPass, storedPass) {

@@ -3,7 +3,10 @@
  import customErr from '../Utilities/customErr.js'
  import jwt from 'jsonwebtoken';
  import crypto from 'node:crypto';
- import emailTemplate from '../Utilities/email.js';
+ import {
+     actAccEmail,
+     resetAccEmail
+ } from '../Utilities/email.js';
  import {
      promisify
  } from 'node:util';
@@ -27,7 +30,7 @@
          const activationToken = newUser.actToken()
          console.log(activationToken)
          const activateURL = `${req.protocol}://${req.get('host')}/api/v1/auth/activate/${activationToken}`;
-         emailTemplate(req, newUser, activateURL)
+         actAccEmail(req, newUser, activateURL)
          res.status(201).json({
              status: 'success',
              meesage: 'User created successfully'
@@ -118,8 +121,59 @@
      next()
  })
 
+ const forgotPassword = catchAsync(async (req, res, next) => {
+     let token = '';
+     const {
+         email
+     } = req.body
+     const user = await User.findOne({
+         email
+     })
+     if (!user) return next(new customErr('User does not exist', 404))
+     else {
+         token = user.resetToken()
+     }
+     const resetLink = `${req.protocol}://${req.get('host')}/api/v1/auth/resetPassword/${token}`;
+     resetAccEmail(req, user, resetLink)
+     res.status(200).json({
+         status: 'success',
+         message: 'Reset token sent to user\'s email'
+     })
+     await user.save()
+ })
+
+ const resetPassword = catchAsync(async (req, res, next) => {
+     const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+     const user = User.findOne({
+         passwordResetToken: hashedToken,
+         passwordResetTokenRxpires: {
+             $gt: Date.now()
+         }
+     })
+     if (!user) return next(new customErr('Invalid or Expired Token', 400))
+     else {
+         user.password = req.body.password
+         user.passwordResetToken = undefined
+         user.passwordResetTokenRxpires = undefined
+         await user.save()
+     }
+     //  const token = signJwt(user.id)
+     res.status(200).json({
+         status: 'success',
+         message: 'Password updated successfully',
+         //  token,
+         data: {
+             user //Think about user field to exclude when actually in production
+             //Do we sign in user after they reset password or do we ask them to login with the newly created password
+         }
+     })
+ })
+
  export {
      signUp,
      activateAcc,
-     login
+     login,
+     protect,
+     forgotPassword,
+     resetPassword
  }
