@@ -84,6 +84,9 @@
      if (!user || !(await user.checkPass(password, user.password))) {
          return next(new customErr('Incorrect email or password', 400))
      }
+     if (!user.activated) {
+         return next(new customErr('User account not activated!', 401))
+     }
      const token = signJwt(user.id)
      user.password = undefined
      res.status(200).json({
@@ -144,17 +147,24 @@
 
  const resetPassword = catchAsync(async (req, res, next) => {
      const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
-     const user = User.findOne({
+     const user = await User.findOne({
          passwordResetToken: hashedToken,
-         passwordResetTokenRxpires: {
+         passwordResetTokenExpires: {
              $gt: Date.now()
          }
      })
+     console.log(user)
      if (!user) return next(new customErr('Invalid or Expired Token', 400))
      else {
+         if (!user.activated) {
+             user.passwordResetToken = undefined
+             user.passwordResetTokenExpires = undefined
+             user.save()
+             return next(new customErr('User account not activated', 401))
+         }
          user.password = req.body.password
          user.passwordResetToken = undefined
-         user.passwordResetTokenRxpires = undefined
+         user.passwordResetTokenExpires = undefined
          await user.save()
      }
      //  const token = signJwt(user.id)
@@ -163,7 +173,7 @@
          message: 'Password updated successfully',
          //  token,
          data: {
-             user //Think about user field to exclude when actually in production
+             user //Think about user fields to exclude when actually in production
              //Do we sign in user after they reset password or do we ask them to login with the newly created password
          }
      })

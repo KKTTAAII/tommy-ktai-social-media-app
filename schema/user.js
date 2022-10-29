@@ -2,12 +2,6 @@ import mongoose from 'mongoose';
 import validator from 'validator';
 import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs'
-import {
-    head
-} from 'request';
-import {
-    reset
-} from 'nodemon';
 
 const userSchema = mongoose.Schema({
     name: {
@@ -26,12 +20,12 @@ const userSchema = mongoose.Schema({
         minLength: 8,
         required: [true, 'User must enter a password']
     },
-    userName: {
-        type: String,
-        // unique: true, 
-        // minLength: 2,
-        // maxLength: 15
-    },
+    // userName: {
+    //     type: String,
+    //     // unique: true,
+    //     // minLength: 2,
+    //     // maxLength: 15
+    // },
     activated: {
         type: Boolean,
         default: false
